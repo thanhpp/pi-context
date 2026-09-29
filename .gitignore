@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+*.log
+*.tmp
+*.tsbuildinfo
+test/fixtures/*
+!test/fixtures/*.ts
+demo-logs/
+tmp/
+temporary-stores/
+.benchmarks/
