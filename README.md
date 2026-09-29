@@ -3,7 +3,7 @@
 `pi-context` is a pi extension and skill for local, project-specific ECC memory. Install it with pi:
 
 ```sh
-pi install /home/thanhpp/go/src/github.com/thanhpp/pi-context
+pi install npm:@thanhpp/pi-context
 ```
 
 The extension adds the bundled skill text to the system prompt before each agent run. The model assesses whether project memory can help. It can search, read, or record selected facts, results, and decisions through the `pi_context` tool. It does not load memory or save full transcripts on every request.

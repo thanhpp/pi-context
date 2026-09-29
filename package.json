@@ -1,10 +1,12 @@
 {
-  "name": "pi-context",
+  "name": "@thanhpp/pi-context",
   "version": "0.1.0",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/thanhpp/pi-context.git" },
   "type": "module",
   "engines": { "node": ">=22.19.0" },
   "keywords": ["pi-package"],
-  "files": ["src", "skills", "vendor", "README.md", "docs"],
+  "files": ["src", "skills", "vendor", "README.md", "LICENSE", "docs/longmemeval-v2-fit.md", "docs/longmemeval-v2-setup.md", "docs/verification.md"],
   "pi": {
     "extensions": ["./src/extension.ts"],
     "skills": ["./skills/pi-context"]
