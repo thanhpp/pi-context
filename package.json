@@ -1,15 +1,33 @@
 {
   "name": "@thanhpp/pi-context",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/thanhpp/pi-context.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thanhpp/pi-context.git"
+  },
   "type": "module",
-  "engines": { "node": ">=22.19.0" },
-  "keywords": ["pi-package"],
-  "files": ["src", "skills", "vendor", "README.md", "LICENSE", "docs/verification.md"],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "files": [
+    "src",
+    "skills",
+    "vendor",
+    "README.md",
+    "LICENSE",
+    "docs/verification.md"
+  ],
   "pi": {
-    "extensions": ["./src/extension.ts"],
-    "skills": ["./skills/pi-context"]
+    "extensions": [
+      "./src/extension.ts"
+    ],
+    "skills": [
+      "./skills/pi-context"
+    ]
   },
   "scripts": {
     "check": "tsc --noEmit",
@@ -18,7 +36,9 @@
     "eval:recall": "node --experimental-strip-types scripts/eval-recall.ts",
     "eval:inspect": "node --experimental-strip-types scripts/inspect-recall.ts"
   },
-  "dependencies": { "proper-lockfile": "4.1.2" },
+  "dependencies": {
+    "proper-lockfile": "4.1.2"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "typebox": "*"
