@@ -37,6 +37,10 @@ test('skill covers memory selection and cleanup safety rules', () => {
   for (const rule of [
     /At the start of each user-requested work item, assess/u,
     /Read selected IDs/u,
+    /Match the subject and environment/u,
+    /Read conflicting records/u,
+    /Search rank and timestamps alone do not prove/u,
+    /spaces to hyphens/u,
     /Before the final answer, assess whether you learned/u,
     /Do not record routine chatter or a full transcript/u,
     /kind: context.*category: structure/u,

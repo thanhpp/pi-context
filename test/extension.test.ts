@@ -249,6 +249,30 @@ test('pi-context tool schema is closed at every payload object', async t => {
   const consolidation = proposal.properties.consolidations.items;
   assert.equal(consolidation.additionalProperties, false);
   assert.equal(consolidation.properties.summary.additionalProperties, false);
+  const record = root.properties.record.anyOf?.[0] ?? root.properties.record;
+  assert.equal(record.properties.tags.maxItems, 32);
+  assert.equal(record.properties.tags.items.maxLength, 64);
+  assert.match(record.properties.tags.items.description, /spaces to hyphens/u);
+  assert.deepEqual(record.properties.tags, consolidation.properties.summary.properties.tags);
+});
+
+test('record normalizes model tags and reports safe tag errors without echoing input', async t => {
+  const fixture = await makeFixture(t);
+  const harness = makeHarness(fixture);
+  const saved = expectSuccess(await harness.callTool({
+    action: 'record',
+    record: draft('Job transport', 'Jobs use NATS JetStream.', { tags: ['Halyard', 'NATS JetStream'] }),
+  }));
+  assert.deepEqual(saved.data.value.tags, ['halyard', 'nats-jetstream']);
+  const read = expectSuccess(await harness.callTool({ action: 'read', id: saved.data.value.id }));
+  assert.deepEqual(read.data.record.memory.tags, ['halyard', 'nats-jetstream']);
+  const rejected = expectFailure(await harness.callTool({
+    action: 'record',
+    record: draft('Invalid tag', 'Body.', { tags: ['private/path'] }),
+  }), 'MEMORY_INVALID_INPUT');
+  assert.deepEqual(rejected.details, { field: 'tags' });
+  assert.match(rejected.message ?? '', /Tags must use lowercase slugs/u);
+  assert.doesNotMatch(JSON.stringify(rejected), /private\/path/u);
 });
 
 test('all seven tool actions use project memory and return structured envelopes', async t => {

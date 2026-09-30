@@ -6,7 +6,7 @@
   "type": "module",
   "engines": { "node": ">=22.19.0" },
   "keywords": ["pi-package"],
-  "files": ["src", "skills", "vendor", "README.md", "LICENSE", "docs/longmemeval-v2-fit.md", "docs/longmemeval-v2-setup.md", "docs/verification.md"],
+  "files": ["src", "skills", "vendor", "README.md", "LICENSE", "docs/verification.md"],
   "pi": {
     "extensions": ["./src/extension.ts"],
     "skills": ["./skills/pi-context"]
@@ -15,7 +15,8 @@
     "check": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "demo": "node --experimental-strip-types scripts/two-session-demo.ts",
-    "benchmark:longmemeval-v2": "node --experimental-strip-types scripts/longmemeval-v2.ts"
+    "eval:recall": "node --experimental-strip-types scripts/eval-recall.ts",
+    "eval:inspect": "node --experimental-strip-types scripts/inspect-recall.ts"
   },
   "dependencies": { "proper-lockfile": "4.1.2" },
   "peerDependencies": {

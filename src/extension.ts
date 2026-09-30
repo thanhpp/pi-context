@@ -12,7 +12,8 @@ import type {
   ExtensionUIDialogOptions,
   ToolDefinition,
 } from '@earendil-works/pi-coding-agent';
-import { Type, type Static } from 'typebox';
+import { ACTIONS, MEMORY_KINDS, parameters } from './tool-schema.ts';
+import type { PiContextParams, ToolAction } from './tool-schema.ts';
 import { applyCleanup, planCleanup } from './cleanup.ts';
 import type { CleanupPlan, CleanupPreview, CleanupProposal } from './cleanup.ts';
 import { loadConfig } from './config.ts';
@@ -36,77 +37,6 @@ const MAX_OPERATIONAL_STATUS_BYTES = 1_024;
 const MAX_GIT_TIMEOUT_MS = 5_000;
 const MAX_GIT_OUTPUT_BYTES = 64 * 1024;
 const APPROVAL_TIMEOUT_MS = 30_000;
-
-const ACTIONS = [
-  'status',
-  'search',
-  'read',
-  'record',
-  'retention',
-  'cleanup_plan',
-  'cleanup_apply',
-] as const;
-type ToolAction = (typeof ACTIONS)[number];
-
-const MEMORY_KINDS = [
-  'context',
-  'decision',
-  'fact',
-  'handoff',
-  'lesson',
-  'note',
-  'preference',
-  'runbook',
-] as const satisfies readonly MemoryKind[];
-const recordSchema = Type.Object({
-  title: Type.String(),
-  body: Type.String(),
-  kind: Type.Enum(MEMORY_KINDS),
-  category: Type.Enum(['session', 'structure', 'decision', 'other'] as const),
-  tags: Type.Optional(Type.Array(Type.String())),
-  links: Type.Optional(Type.Array(Type.String())),
-  pinned: Type.Optional(Type.Boolean()),
-  expiresAt: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-  sourceRefs: Type.Optional(Type.Array(Type.String())),
-}, { additionalProperties: false });
-
-const retentionSchema = Type.Object({
-  pinned: Type.Optional(Type.Boolean()),
-  expiresAt: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-}, { additionalProperties: false });
-
-const summarySchema = Type.Object({
-  title: Type.String(),
-  body: Type.String(),
-  kind: Type.Enum(MEMORY_KINDS),
-  category: Type.Enum(['session', 'structure', 'decision', 'other'] as const),
-  tags: Type.Optional(Type.Array(Type.String())),
-  links: Type.Optional(Type.Array(Type.String())),
-}, { additionalProperties: false });
-
-const consolidationSchema = Type.Object({
-  sourceIds: Type.Array(Type.String()),
-  summary: summarySchema,
-}, { additionalProperties: false });
-
-const proposalSchema = Type.Object({
-  revision: Type.String(),
-  obsoleteIds: Type.Array(Type.String()),
-  consolidations: Type.Array(consolidationSchema),
-}, { additionalProperties: false });
-
-const parameters = Type.Object({
-  action: Type.Enum(ACTIONS),
-  query: Type.Optional(Type.String()),
-  kinds: Type.Optional(Type.Array(Type.Enum(MEMORY_KINDS))),
-  limit: Type.Optional(Type.Integer({ minimum: 1 })),
-  id: Type.Optional(Type.String()),
-  record: Type.Optional(recordSchema),
-  retention: Type.Optional(retentionSchema),
-  requestedFreeBytes: Type.Optional(Type.Integer({ minimum: 0 })),
-  proposal: Type.Optional(proposalSchema),
-}, { additionalProperties: false });
-type PiContextParams = Static<typeof parameters>;
 
 type SuccessEnvelope = { ok: true; action: ToolAction; data: unknown };
 type FailureEnvelope = {
@@ -206,6 +136,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   STORE_RECOVERY_REQUIRED: 'The memory store needs safe recovery before it can be changed.',
   TOOL_INVALID_ARGUMENTS: 'The tool arguments are invalid for the selected action.',
   MAINTENANCE_PENDING: 'The write committed. Maintenance is pending. Do not repeat the committed write.',
+  MEMORY_INVALID_INPUT: 'The record input is invalid. Check title, body, kind, category, tags, links, and expiry. Tags must use lowercase slugs after normalization.',
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -246,6 +177,7 @@ function safeErrorDetails(error: unknown, code: string): Record<string, unknown>
   if (source.recoveryRequired === true || source.recoveryRequired === false) {
     details.recoveryRequired = source.recoveryRequired;
   }
+  if (code === 'MEMORY_INVALID_INPUT' && source.field === 'tags') details.field = 'tags';
   if (source.cleanupRequired === true) details.cleanupRequired = true;
   if (code === 'QUOTA_EXCEEDED') details.cleanupRequired = true;
   return Object.keys(details).length > 0 ? details : undefined;

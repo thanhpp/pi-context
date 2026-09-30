@@ -187,6 +187,42 @@ updated_at: "${FIXED_NOW}"
   assert.equal(document.split('\n').slice(1, 14).length, 13);
 });
 
+test('prepareRecord normalizes every tag set rejected in the paid benchmark', () => {
+  const source = { sessionId: 'session-1', worktreeRoot: '/tmp/project', head: null };
+  const rejectedTagSets = [
+    ['Halyard', 'storage', 'deployment'],
+    ['Halyard', 'email', 'Postmark'],
+    ['Halyard', 'email', 'Postmark'],
+    ['Halyard', 'logging'],
+    ['Halyard', 'mobile', 'Realm'],
+    ['Halyard', 'planning', 'schedule'],
+    ['Halyard', 'support', 'response time'],
+    ['brand', 'Halyard', 'color'],
+    ['Halyard', 'background-jobs', 'NATS JetStream'],
+    ['Halyard', 'planning', 'schedule'],
+  ];
+  for (const tags of rejectedTagSets) {
+    const prepared = prepareRecord(draft({ tags }), source, FIXED_NOW, 'mem_fixture_tags001');
+    assert.deepEqual(prepared.memory.tags, tags.map(tag => tag.toLowerCase().replaceAll(' ', '-')));
+    assert.deepEqual(ecc.parseMemoryDocument(ecc.serializeMemoryDocument(prepared.memory)), prepared.memory);
+  }
+  const prepared = prepareRecord(draft({ tags: [' Halyard ', 'halyard', 'NATS  JetStream', 'eu.central-1'] }), source, FIXED_NOW);
+  assert.deepEqual(prepared.memory.tags, ['halyard', 'nats-jetstream', 'eu.central-1']);
+});
+
+test('tag normalization rejects unsafe input and checks secrets before changing case', () => {
+  const source = { sessionId: 'session-1', worktreeRoot: '/tmp/project', head: null };
+  for (const tags of [[''], ['x'.repeat(65)], ['bad/tag'], ['tag\tname'], ['tag\nname'], ['tag\u202ename'], Array(33).fill('tag'), [12], null]) {
+    assert.throws(() => prepareRecord(draft({ tags: tags as string[] }), source, FIXED_NOW), error => {
+      assert.equal(errorCode(error), 'MEMORY_INVALID_INPUT');
+      assert.deepEqual((error as { details: unknown }).details, { field: 'tags' });
+      return true;
+    });
+  }
+  const rawAwsKey = `AKIA${'A'.repeat(16)}`;
+  assert.throws(() => prepareRecord(draft({ tags: [rawAwsKey] }), source, FIXED_NOW), isCode('MEMORY_SUSPECTED_SECRET'));
+});
+
 test('prepareRecord accepts every ECC memory kind', () => {
   const source = { sessionId: 'session-1', worktreeRoot: '/tmp/project', head: null };
   for (const [index, kind] of KINDS.entries()) {

@@ -127,6 +127,8 @@ function safeDetails(error: ContextError, code: string): Record<string, unknown>
     if (source.actualRevision === null || typeof source.actualRevision === 'string') {
       result.actualRevision = source.actualRevision;
     }
+  } else if (code === 'MEMORY_INVALID_INPUT' && source.field === 'tags') {
+    result.field = 'tags';
   } else if (typeof source.recoveryRequired === 'boolean') {
     result.recoveryRequired = source.recoveryRequired;
   }
@@ -256,6 +258,24 @@ function validateDraftShape(input: unknown): asserts input is RecordDraft {
   }
 }
 
+function normalizeRecordTags(value: unknown): string[] {
+  if (value === undefined) return [];
+  const invalidTags = () => fail('MEMORY_INVALID_INPUT', 'Record tags are invalid.', { field: 'tags' });
+  if (!Array.isArray(value) || value.length > 32) throw invalidTags();
+  const tags = value.map(tag => {
+    if (typeof tag !== 'string' || tag.length > 64 || ecc.hasUnsafeControlCharacters(tag)) throw invalidTags();
+    if (ecc.findPotentialSecrets(tag).length > 0) {
+      throw fail('MEMORY_SUSPECTED_SECRET', 'Memory input contains a suspected secret.');
+    }
+    try {
+      return ecc.validateSlug(tag.trim().toLowerCase().replace(/ +/gu, '-'), 'tag');
+    } catch {
+      throw invalidTags();
+    }
+  });
+  return [...new Set(tags)];
+}
+
 export function prepareRecord(
   input: RecordDraft,
   source: SessionSource,
@@ -292,7 +312,7 @@ export function prepareRecord(
       status: 'active',
       sourceHarness: 'pi',
       targetHarnesses: ['pi'],
-      tags: input.tags === undefined ? [] : input.tags,
+      tags: normalizeRecordTags(input.tags),
       links: input.links === undefined ? [] : input.links,
       createdAt: now,
       updatedAt: now,
