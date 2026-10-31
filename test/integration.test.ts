@@ -280,7 +280,7 @@ test('the real extension records and shares project memory, enforces quotas, and
         action: 'search',
         query: 'shared integration marker',
       }));
-      const sharedIds = sharedSearch.data.results.map((item: any) => item.memory.id);
+      const sharedIds = sharedSearch.data.results.map((item: any) => item.id);
       for (const id of ids) assert.ok(sharedIds.includes(id), `worktree search missed ${id}`);
       const worktreeDecision = success(await worktreeHarness.callTool({ action: 'read', id: decisionId }));
       assert.equal(worktreeDecision.data.record.memory.id, decisionId);
@@ -322,7 +322,7 @@ test('the real extension records and shares project memory, enforces quotas, and
         action: 'record',
         record: recordDraft(
           'Large old implementation detail',
-          `Source information for a safe replacement. ${'old implementation detail '.repeat(420)}`,
+          `Source information for a safe replacement. ${'old implementation detail '.repeat(150)}`,
           { sourceRefs: ['fixture://quota/source'] },
         ),
       }));

@@ -16,7 +16,7 @@ Use only the `pi_context` tool for memory. Its status contains operational data 
 | Action | Input after `action` | Result |
 |---|---|---|
 | `status` | None | Project identity, quota, mode, expiry count, and recovery status. |
-| `search` | `query`; optional `kinds`, `limit` | ECC-ranked summaries, excerpts, retention metadata, and scan diagnostics. |
+| `search` | `query`; optional `kinds`, `limit` | ECC-ranked short hits, excerpts, pin/expiry, and complete scan diagnostics. Ellipses indicate excerpt truncation; use read for full content. |
 | `read` | `id` | Full ECC record, backlinks, and separate retention metadata. |
 | `record` | `record` | One new record and its committed revision. |
 | `retention` | `id`, `retention` | A pin or expiry change. Unpinning requires real user approval. |
@@ -31,7 +31,7 @@ Match the subject and environment before using a fact. A staging fact does not e
 
 ## Select useful records
 
-Before the final answer, assess whether you learned a reusable structure fact, completed meaningful work, found a failure with a useful result, or reached a decision. Record selected context without waiting for a user request. Do not record routine chatter or a full transcript.
+Before the final answer, select memory that prevents future failures, guides later sessions, or captures user preferences. Record selected context without waiting for a user request. Do not store facts readily recoverable from code, AGENTS.md, or CLAUDE.md. Save concise core ideas with essential evidence and uncertainty, never transcripts or duplicated repository documentation. New record and consolidation bodies are limited to 4,096 UTF-8 bytes after storage normalization; rewrite rather than truncate.
 
 A record requires `title`, `body`, `kind`, and `category`. It can also include `tags`, `links`, `pinned`, `expiresAt`, and `sourceRefs`. Tags use lowercase slugs, for example `background-jobs`. The tool converts uppercase letters to lowercase and spaces to hyphens. It removes duplicate normalized tags. Categories are `session`, `structure`, `decision`, and `other`. ECC kinds are `context`, `decision`, `fact`, `handoff`, `lesson`, `note`, `preference`, and `runbook`.
 

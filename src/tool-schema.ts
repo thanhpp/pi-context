@@ -18,7 +18,7 @@ const tagsSchema = Type.Optional(Type.Array(Type.String({
 const linksSchema = Type.Optional(Type.Array(Type.String(), { maxItems: 64, uniqueItems: true }));
 const summaryFields = {
   title: Type.String({ minLength: 1, maxLength: 200 }),
-  body: Type.String({ minLength: 1, description: 'Project context. The UTF-8 limit is 65,536 bytes.' }),
+  body: Type.String({ minLength: 1, description: 'Concise core idea with essential evidence and uncertainty. After storage normalization the UTF-8 limit is 4,096 bytes; never truncate to fit.' }),
   kind: Type.Enum(MEMORY_KINDS),
   category: Type.Enum(['session', 'structure', 'decision', 'other'] as const),
   tags: tagsSchema,

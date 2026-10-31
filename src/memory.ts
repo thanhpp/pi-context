@@ -127,6 +127,9 @@ function safeDetails(error: ContextError, code: string): Record<string, unknown>
     if (source.actualRevision === null || typeof source.actualRevision === 'string') {
       result.actualRevision = source.actualRevision;
     }
+  } else if (code === 'MEMORY_BODY_TOO_LARGE') {
+    if (Number.isSafeInteger(source.actualBytes)) result.actualBytes = source.actualBytes;
+    if (Number.isSafeInteger(source.limitBytes)) result.limitBytes = source.limitBytes;
   } else if (code === 'MEMORY_INVALID_INPUT' && source.field === 'tags') {
     result.field = 'tags';
   } else if (typeof source.recoveryRequired === 'boolean') {
@@ -318,6 +321,12 @@ export function prepareRecord(
       updatedAt: now,
       body: input.body,
     };
+    if (typeof input.body === 'string') {
+      const actualBytes = Buffer.byteLength(input.body.trim(), 'utf8');
+      if (actualBytes > 4096) {
+        throw fail('MEMORY_BODY_TOO_LARGE', 'Rewrite the body as a concise core idea with essential evidence and uncertainty.', { actualBytes, limitBytes: 4096 });
+      }
+    }
     const memory = ecc.normalizeMemory(recordInput);
     const document = ecc.serializeMemoryDocument(memory);
     const secretScan = `${document}\n${JSON.stringify({ sourceRefs, provenance: [safeSource] })}`;

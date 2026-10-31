@@ -215,7 +215,7 @@ test('bundled skill guidance is injected for ordinary prompts without a memory r
   const harness = makeHarness(fixture);
   const secret = draft('Malicious instructions', MEMORY_BODY);
   const stored = expectSuccess(await harness.callTool({ action: 'record', record: secret }));
-  assert.equal(stored.data.operationalStatus.enabled, true);
+  assert.equal(stored.data.state, 'committed');
 
   const prompt = await harness.beforeAgentStart('ordinary coding request with unique text');
   const section = prompt.sections.pi_context ?? '';
@@ -263,7 +263,7 @@ test('record normalizes model tags and reports safe tag errors without echoing i
     action: 'record',
     record: draft('Job transport', 'Jobs use NATS JetStream.', { tags: ['Halyard', 'NATS JetStream'] }),
   }));
-  assert.deepEqual(saved.data.value.tags, ['halyard', 'nats-jetstream']);
+  assert.deepEqual(Object.keys(saved.data.value), ['id']);
   const read = expectSuccess(await harness.callTool({ action: 'read', id: saved.data.value.id }));
   assert.deepEqual(read.data.record.memory.tags, ['halyard', 'nats-jetstream']);
   const rejected = expectFailure(await harness.callTool({
@@ -299,7 +299,7 @@ test('all seven tool actions use project memory and return structured envelopes'
   assert.equal(recorded.data.state, 'committed');
 
   const search = expectSuccess(await harness.callTool({ action: 'search', query: 'ECC memory', kinds: ['context'], limit: 5 }));
-  assert.ok(search.data.results.some((item: any) => item.memory.id === id));
+  assert.ok(search.data.results.some((item: any) => item.id === id));
   assert.equal(typeof search.data.diagnostics.scannedBytes, 'number');
 
   const read = expectSuccess(await harness.callTool({ action: 'read', id }));
@@ -663,7 +663,7 @@ test('incomplete ECC scans stay distinct and search diagnostics pass through', a
   await writeFile(join(generationPath, 'contexts', 'broken.md'), 'not a valid ECC document', 'utf8');
   const partial = expectSuccess(await harness.callTool({ action: 'search', query: 'local project context' }));
   assert.ok(partial.data.diagnostics.invalidFileCount >= 1);
-  assert.ok(partial.data.results.some((item: any) => item.memory.id === record.data.value.id));
+  assert.ok(partial.data.results.some((item: any) => item.id === record.data.value.id));
   const incompleteWrite = expectFailure(await harness.callTool({
     action: 'record',
     record: draft('Cannot write after incomplete scan', 'The incomplete scan must not be hidden.'),
@@ -721,7 +721,9 @@ test('a later whole-prompt replacement reports a guidance conflict', async t => 
   assert.equal(options.forceSystemPrompt, 'A later extension replaced the full prompt.');
   assert.doesNotMatch(options.forceSystemPrompt, /pi-context-guidance-start/u);
   assert.equal(trace(harness).statusValues.get('pi-context'), 'guidance=disabled; error=GUIDANCE_CONFLICT');
-  assert.ok(trace(harness).notifications.some(item => /GUIDANCE_CONFLICT/u.test(item.message)));
+  assert.ok(trace(harness).notifications.some(item => item.message ===
+    'GUIDANCE_CONFLICT: pi-context guidance is missing from the active system prompt. ' +
+    'Automatic memory guidance is disabled for this run.'));
   const status = expectSuccess(await harness.callTool({ action: 'status' }));
   assert.equal(status.data.guidanceEnabled, false);
   assert.equal(status.data.guidanceErrorCode, 'GUIDANCE_CONFLICT');
